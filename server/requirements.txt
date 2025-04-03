@@ -1,0 +1,15 @@
+flask
+flask_cors
+soundfile
+transformers
+boto3
+pymongo==4.0.1
+librosa
+torch
+pillow
+numpy
+werkzeug
+uuid
+opencv-python
+timm
+pymongo[srv]
