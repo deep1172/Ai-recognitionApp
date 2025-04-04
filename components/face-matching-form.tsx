@@ -97,7 +97,7 @@ export default function FaceMatchingForm() {
   
       setResult({
         match: data.match,
-        confidence: data.confidence,
+        confidence: data.confidence/100,
         model: "AWS Rekognition",
       });
   
@@ -110,7 +110,7 @@ export default function FaceMatchingForm() {
   
       toast({
         title: "Error",
-        description: "Failed to process your request",
+        description: "Failed to process your request, It seems there is no faces",
         variant: "destructive",
       });
     } finally {
@@ -181,8 +181,8 @@ export default function FaceMatchingForm() {
           <Card className="p-4 mt-4">
             <div className="text-center">
               <h3 className="text-lg font-medium">{result.match ? "Faces Match!" : "Faces Don't Match"}</h3>
-              <p className="text-sm text-gray-500 mb-2">Confidence: {result.confidence * 100}%</p>
-              <p className="text-xs text-gray-400">Processed with {result.model}</p>
+              <p className="text-sm text-gray-500 mb-2">Possibility: {result.confidence * 100}%</p>
+             
             </div>
           </Card>
         )}
