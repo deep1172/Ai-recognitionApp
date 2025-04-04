@@ -59,7 +59,7 @@ export default function FaceMatchingForm() {
     setImages(images.filter((_, i) => i !== index))
   }
 
-  /*
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
   
@@ -81,10 +81,11 @@ export default function FaceMatchingForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sourceImage: images[0].file.name,
-          targetImage: images[1]?.file.name || "",
+          sourceImage: `uploads/${images[0].file.name}`,
+          targetImage: `uploads/${images[1].file.name}`,
         }),
       });
+      
       
   
       if (!res.ok) {
@@ -116,90 +117,6 @@ export default function FaceMatchingForm() {
       setLoading(false);
     }
   };
-*/
-
-/*
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault(); // Stop page reload
-
-  console.log("Submitting form...");
-
-  if (images.length < 2) {
-    console.log("Not enough images selected.");
-    return;
-  }
-
-  try {
-    const imageUrls = await Promise.all(images.map((img) => uploadToS3(img.file)));
-
-    console.log("Uploaded Image URLs:", imageUrls); // Check if URLs are correct
-
-    const requestBody = {
-      sourceImage: imageUrls[0],
-      targetImage: imageUrls[1] || "",
-    };
-
-    console.log("Sending request to API:", requestBody);
-
-    const res = await fetch("/api/compare-faces", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody),
-    });
-
-    console.log("Response status:", res.status);
-    const data = await res.json();
-    console.log("Response from server:", data);
-  } catch (error) {
-    console.error("Fetch error:", error);
-  }
-};
-
-*/
-
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-
-  try {
-    const res = await fetch("/api/compare-faces", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sourceImage: "IMG_20220701_171858.jpg",
-        targetImage: "IMG_20220701_172632.jpg",
-      }),
-    });
-
-    if (!res.ok) {
-      throw new Error(`API Error: ${res.statusText}`);
-    }
-
-    const data = await res.json();
-    console.log("API Response:", data);
-
-    setResult({
-      match: data.match,
-      confidence: data.confidence,
-      model: "AWS Rekognition",
-    });
-
-    toast({
-      title: "Processing complete",
-      description: data.match ? "Faces match!" : "Faces do not match",
-    });
-  } catch (error) {
-    console.error("Error processing images:", error);
-    toast({
-      title: "Error",
-      description: "Failed to process your request",
-      variant: "destructive",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
-
 
 
   return (

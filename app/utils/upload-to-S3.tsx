@@ -15,7 +15,7 @@ export const uploadToS3 = async (file: File): Promise<string> => {
       throw new Error("S3 Bucket name is not defined in environment variables.");
     }
 
-    const key = `uploads/${Date.now()}-${file.name}`;
+    const key = `uploads/${file.name}`;
 
     // Convert ArrayBuffer to Uint8Array
     const fileBuffer = new Uint8Array(await file.arrayBuffer());
@@ -24,7 +24,6 @@ export const uploadToS3 = async (file: File): Promise<string> => {
       Bucket: bucketName,
       Key: key,
       Body: fileBuffer,
-      ACL: "public-read",
       ContentType: file.type,
     });
 
