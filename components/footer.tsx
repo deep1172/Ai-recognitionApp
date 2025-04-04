@@ -20,15 +20,11 @@ export default function Footer() {
                 <Twitter className="h-5 w-5" />
                 <span className="sr-only">Twitter</span>
               </Link>
-              <Link href="#" className="text-gray-400 hover:text-gray-500">
-                <Instagram className="h-5 w-5" />
-                <span className="sr-only">Instagram</span>
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-gray-500">
+              <Link href="https://www.linkedin.com/in/deepak-kumar-ab6810202/" className="text-gray-400 hover:text-gray-500">
                 <Linkedin className="h-5 w-5" />
                 <span className="sr-only">LinkedIn</span>
               </Link>
-              <Link href="#" className="text-gray-400 hover:text-gray-500">
+              <Link href="https://github.com/deep1172" className="text-gray-400 hover:text-gray-500">
                 <Github className="h-5 w-5" />
                 <span className="sr-only">GitHub</span>
               </Link>

@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -10,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Loader2, Upload, X } from "lucide-react"
 import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
+import { uploadToS3 } from "@/app/utils/upload-to-S3"
 
 interface UploadFormProps {
   mode: "matching" | "recognition"
@@ -47,8 +47,8 @@ export default function UploadForm({ mode }: UploadFormProps) {
 
     const reader = new FileReader()
     reader.onload = () => {
-      setImages([
-        ...images,
+      setImages((prev) => [
+        ...prev,
         {
           file,
           preview: reader.result as string,
@@ -59,13 +59,13 @@ export default function UploadForm({ mode }: UploadFormProps) {
   }
 
   const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index))
+    setImages((prev) => prev.filter((_, i) => i !== index))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (images.length < (mode === "matching" ? 2 : 1)) {
+    if (images.length < maxImages) {
       toast({
         title: "Not enough images",
         description: `Please upload ${mode === "matching" ? "two" : "an"} image${mode === "matching" ? "s" : ""}`,
@@ -77,36 +77,40 @@ export default function UploadForm({ mode }: UploadFormProps) {
     setLoading(true)
 
     try {
-      const formData = new FormData()
-      images.forEach((img, index) => {
-        formData.append(`image${index + 1}`, img.file)
+      // Upload images to S3
+      const imageUrls = await Promise.all(images.map((img) => uploadToS3(img.file)))
+
+      const endpoint = mode === "matching" ? "/api/match-faces" : "/api/recognize-face";
+
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceImageUrl: imageUrls[0],
+          targetImageUrl: mode === "matching" ? imageUrls[1] : undefined,
+        }),
       })
 
-      // In a real implementation, this would be your Flask API endpoint
-      const endpoint = mode === "matching" ? "/api/match-faces" : "/api/recognize-face"
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Simulate response
-      if (mode === "matching") {
-        setResult({
-          match: Math.random() > 0.5,
-          confidence: (Math.random() * 0.5 + 0.5).toFixed(2),
-        })
-      } else {
-        setResult({
-          recognized: Math.random() > 0.3,
-          person: Math.random() > 0.3 ? "John Doe" : null,
-          confidence: (Math.random() * 0.5 + 0.5).toFixed(2),
-        })
+      if (!res.ok) {
+        throw new Error(`API Error: ${res.statusText}`)
       }
+
+      const data = await res.json()
+
+      setResult({
+        match: data.match ?? false,
+        confidence: data.confidence ?? 0,
+        model: "AWS Rekognition",
+      })
 
       toast({
         title: "Processing complete",
-        description: "Your images have been analyzed",
+        description: data.match ? "Faces match!" : "Faces do not match",
       })
     } catch (error) {
+      console.error("Error processing images:", error)
+
       toast({
         title: "Error",
         description: "Failed to process your request",
@@ -163,7 +167,7 @@ export default function UploadForm({ mode }: UploadFormProps) {
           ))}
         </div>
 
-        <Button type="submit" className="w-full" disabled={images.length < (mode === "matching" ? 2 : 1) || loading}>
+        <Button type="submit" className="w-full" disabled={images.length < maxImages || loading}>
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -181,17 +185,17 @@ export default function UploadForm({ mode }: UploadFormProps) {
             {mode === "matching" ? (
               <div className="text-center">
                 <h3 className="text-lg font-medium">{result.match ? "Faces Match!" : "Faces Don't Match"}</h3>
-                <p className="text-sm text-gray-500">Confidence: {result.confidence * 100}%</p>
+                <p className="text-sm text-gray-500">Confidence: {result.confidence}%</p>
               </div>
             ) : (
               <div className="text-center">
-                {result.recognized ? (
+                {result.match ? (
                   <>
-                    <h3 className="text-lg font-medium">Recognized as: {result.person}</h3>
-                    <p className="text-sm text-gray-500">Confidence: {result.confidence * 100}%</p>
+                    <h3 className="text-lg font-medium">Face Recognized!</h3>
+                    <p className="text-sm text-gray-500">Confidence: {result.confidence}%</p>
                   </>
                 ) : (
-                  <h3 className="text-lg font-medium">No match found in database</h3>
+                  <h3 className="text-lg font-medium">No Match Found</h3>
                 )}
               </div>
             )}
@@ -201,4 +205,3 @@ export default function UploadForm({ mode }: UploadFormProps) {
     </form>
   )
 }
-

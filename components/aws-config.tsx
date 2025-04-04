@@ -6,4 +6,5 @@ AWS.config.update({
   region: process.env.AWS_REGION, 
 });
 
-export const rekognition = new AWS.Rekognition();
+const rekognition = new AWS.Rekognition();
+export default rekognition;
