@@ -1,5 +1,5 @@
 # Use Node.js image
-FROM node:22-alpine
+FROM node:22-slim
 
 WORKDIR /app
 COPY .env.local .env.local
