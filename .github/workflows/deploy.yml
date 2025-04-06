@@ -1,0 +1,33 @@
+name: Deploy 3-Tier App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Setup SSH Access
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Sync Code to EC2
+      run: |
+        rsync -avz --exclude '.venv' --exclude 'node_modules' \
+          -e "ssh -o StrictHostKeyChecking=no" \
+          ./ ec2-user@${{ secrets.HOST }}:/home/ec2-user/myapp/
+
+    - name: Deploy on EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.HOST }} << 'EOF'
+          cd /home/ec2-user/myapp
+          docker-compose down
+          docker-compose up --build -d
+        EOF
