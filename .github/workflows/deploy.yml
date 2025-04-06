@@ -18,16 +18,19 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Sync Code to EC2
+    - name: Add EC2 to known hosts
       run: |
-        rsync -avz --exclude '.venv' --exclude 'node_modules' \
-          -e "ssh -o StrictHostKeyChecking=no" \
-          ./ ec2-user@${{ secrets.HOST }}:/home/ec2-user/myapp/
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
 
-    - name: Deploy on EC2
+    - name: Copy files to EC2
       run: |
-        ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.HOST }} << 'EOF'
-          cd /home/ec2-user/myapp
-          docker-compose down
-          docker-compose up --build -d
-        EOF
+          rsync -avz --exclude '.git' --exclude 'node_modules' ./ ubuntu@${{ secrets.HOST }}:/home/ubuntu/Ai-recognitionApp
+
+    - name: Connect and deploy
+      run: |
+          ssh ubuntu@${{ secrets.HOST }} << 'EOF'
+            cd /home/ubuntu/Ai-recognitionApp
+            echo "${{ secrets.ENV_LOCAL }}" > .env.local
+            docker-compose down
+            docker-compose up --build -d
+          EOF

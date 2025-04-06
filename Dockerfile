@@ -1,10 +1,11 @@
 # Use Node.js image
-FROM node:18-alpine
+FROM node:22-alpine
 
 WORKDIR /app
+COPY .env.local .env.local
 
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm install 
 
 COPY . .
 
